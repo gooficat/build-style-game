@@ -9,7 +9,7 @@
 
 #define G_WIDTH 1280
 #define G_HEIGHT 320
-#define G_FPS 20
+#define G_FPS 120
 
 void game_loop(void) {
     g_frame_start();
@@ -19,8 +19,10 @@ void game_loop(void) {
 
 wall_t *walls;
 sector_t *sectors;
-uint8_t wall_count;
-uint8_t sector_count;
+uint8_t wall_count = 0;
+uint8_t sector_count = 0;
+texture_t* textures;
+uint8_t texture_count = 0;
 
 int main(void) {
     game_init(G_WIDTH, G_HEIGHT, G_FPS);
@@ -45,6 +47,9 @@ int main(void) {
         }
         game_loop();
     }
+    free(walls);
+    free(sectors);
+    free(textures);
 
     return 0;
 }

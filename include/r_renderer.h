@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include <stdlib.h>
 #include <math.h>
+#include <SDL3_image/SDL_image.h>
 
 #include "g_game_state.h"
 

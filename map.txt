@@ -1,7 +1,7 @@
-w 0 0 0xFFFF
-w 320 0 0xFF0F
-w 320 320 0xFFFF
-w 0 320 0xFFFF
+w 0 0 0
+w 320 0 0
+w 320 320 0
+w 0 320 0
 
 w 432 464 0xFFFF
 w 520 464 0xFFFF
@@ -21,4 +21,4 @@ s 8 12 -430 0 0
 
 p 10 10 -40 0 0
 
-t Stone.PNG
+t ../textures/Stone.PNG

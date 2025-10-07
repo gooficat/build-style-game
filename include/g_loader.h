@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL3_image/SDL_image.h>
+
 
 #include "g_game_state.h"
 
@@ -10,7 +12,9 @@ int load_map(const char *path)
     FILE *f = fopen(path, "r");
 	if (!f) printf("failed to open map file\n");
     char ln[256];
-	uint8_t w, s;
+    char* texPath = "\0";
+    SDL_Surface* texSurf;
+	uint8_t w, s, t;
     while (fgets(ln, 256, f)) {
         switch (ln[0]) {
         case 'w':
@@ -20,10 +24,10 @@ int load_map(const char *path)
 			w -= 1;
             walls[w] = (wall_t){0};
             sscanf(ln,
-                   "w %d %d %hx",
+                   "w %d %d %hhu",
                    &walls[w].x,
                    &walls[w].y,
-                   &walls[w].color);
+                   &walls[w].texture);
             break;
         case 's':
 			sector_count += 1;
@@ -46,6 +50,22 @@ int load_map(const char *path)
                    &state.origin.position.y,
                    &state.origin.position.z,
                    &state.origin.rotation);
+            break;
+        case 't':
+            printf("read texture\n");
+            *texPath = '\0';
+            texPath = "../textures/Glass.PNG";
+            texture_count += 1;
+            t = texture_count;
+            textures = realloc(textures, sizeof(texture_t) * (t));
+            t -= 1;
+            texSurf = IMG_Load(texPath);
+            textures[t] = (texture_t){
+                .w = texSurf->w,
+                .h = texSurf->h,
+                .pixels = malloc(sizeof(uint16_t) * texSurf->w * texSurf->h)
+            };
+            SDL_ConvertPixels(textures[t].w, textures[t].h, texSurf->format, texSurf->pixels, texSurf->pitch, SDL_PIXELFORMAT_ARGB4444, textures[t].pixels, sizeof(uint16_t) * textures[t].w);
             break;
         default:
             break;

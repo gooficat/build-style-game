@@ -35,6 +35,8 @@ extern sector_t *sectors;
 extern wall_t *walls;
 extern uint8_t wall_count;
 extern uint8_t sector_count;
+extern texture_t* textures;
+extern uint8_t texture_count;
 
 void game_init(int width, int height, int fps);
 

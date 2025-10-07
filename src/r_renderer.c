@@ -22,7 +22,8 @@ void pixel(int x, int y, uint16_t color) {
     buffer[y * state.win_width + x] = color;
 }
 
-void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t color) {
+void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, texture_t* texture) {
+
 	bool backface;
 	if (x2 < x1) {
 		int swp = x2;
@@ -42,6 +43,14 @@ void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t color) {
 	int dt = t2 - t1;
 	int dx = x2 - x1; if (!dx) dx = 1;
 	int sx = x1;
+
+	float ht = 0;
+	float ht_step = (float)texture->w / (float)(x2 - x1);
+
+	if (x1 < 0) {
+		ht -= ht_step * x1;
+	}
+
 	if (x1 >= state.win_width) x1 = state.win_width - 1;
 	if (x2 >= state.win_width) x2 = state.win_width - 1;
 	if (x1 < 0) x1 = 0;
@@ -51,6 +60,13 @@ void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t color) {
 		int y1 = db * (x - sx + 0.5) / dx + b1;
 		int y2 = dt * (x - sx + 0.5) / dx + t1;
 
+		float vt = 0;
+		float vt_step = (float)texture->h / (float)(y2 - y1);
+
+		if (y1 < 0) {
+			vt -= vt_step * y1;
+		}
+
 		if (y1 >= state.win_height) y1 = state.win_height - 1;
 		if (y2 >= state.win_height) y2 = state.win_height - 1;
 		if (y1 < 0) y1 = 0;
@@ -58,10 +74,12 @@ void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t color) {
 
 		if (!backface) {
 			for (int y = y1; y < y2; y++) {
+				uint16_t color = texture->pixels[(int)vt * texture->w + (int)ht];
 				pixel(x, y, color);
+				vt += vt_step;
 			}
-			pixel(x, y1, color/9);
 		}
+		ht += ht_step;
 
 		if (backface) {
 			ceil_lut.t[x] = y1;
@@ -71,6 +89,7 @@ void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t color) {
 			ceil_lut.b[x] = y1;
 			floor_lut.t[x] = y2;
 		}
+
 	}
 }
 
@@ -87,7 +106,7 @@ void clip_line(int *x1, int *y1, int *z0, int x2, int y2, int z1) {
 #define dist(x, y) sqrt((x*x) + (y*y))
 
 void renderer_init(SDL_Renderer* renderer) {
-    buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA4444, SDL_TEXTUREACCESS_STREAMING, state.win_width, state.win_height);
+    buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB4444, SDL_TEXTUREACCESS_STREAMING, state.win_width, state.win_height);
 	buffer = (uint16_t*)malloc(state.win_width * state.win_height * sizeof(uint16_t));
 	ceil_lut.t = (int16_t*)malloc(state.win_width * sizeof(int16_t));
 	ceil_lut.b = (int16_t*)malloc(state.win_width * sizeof(int16_t));
@@ -168,8 +187,9 @@ void draw_sector(int i) {
 		wy[1] = wz[1] * FOCAL_LENGTH / wy[1] + state.win_height/2;
 		wy[2] = wz[2] * FOCAL_LENGTH / wy[2] + state.win_height/2;
 		wy[3] = wz[3] * FOCAL_LENGTH / wy[3] + state.win_height/2;
+
 		
-		drawWall(wx[0], wx[1], wy[0], wy[1], wy[2], wy[3], walls[j].color);
+		drawWall(wx[0], wx[1], wy[0], wy[1], wy[2], wy[3], &textures[walls[j].texture]);
 	}
 	for (int px = 0; px < state.win_width; px++) {
 		if (ceil_lut.t[px] == -1 && ceil_lut.b[px] == -1) goto next;
@@ -180,7 +200,7 @@ void draw_sector(int i) {
 			ceil_lut.b[px] = state.win_height - 1;
 		}
 		for (int py = ceil_lut.t[px]; py < ceil_lut.b[px]; py++) {
-			pixel(px, py, 0xF00F);
+			pixel(px, py, 0xF0F3);
 		}
 		next:
 		if (floor_lut.t[px] == -1 && floor_lut.b[px] == -1) continue;
@@ -191,7 +211,7 @@ void draw_sector(int i) {
 			floor_lut.b[px] = state.win_height - 1;
 		}
 		for (int py = floor_lut.t[px]; py < floor_lut.b[px]; py++) {
-			pixel(px, py, 0xF00F);
+			pixel(px, py, 0xF003);
 		}
 	}
 }
@@ -217,7 +237,7 @@ void renderer_render(SDL_Renderer* renderer) {
 }
 
 
-void renderer_destroy() {
+void renderer_destroy(void) {
 	free(buffer);
 	SDL_DestroyTexture(buffer_texture);
 	free(ceil_lut.t);

@@ -16,6 +16,7 @@ target_include_directories(buildlikefps PRIVATE include)
 target_link_libraries(
 	buildlikefps
 	SDL3
+	SDL3_Image
 )
 
 add_custom_command(TARGET buildlikefps POST_BUILD
