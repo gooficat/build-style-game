@@ -14,17 +14,31 @@ typedef struct vec3 {
 } vec3;
 
 typedef struct vec2i {
-	int x, y;
-} ve2i;
+	int x;
+	int y;
+} vec2i;
+
+typedef struct vec3i {
+    int x;
+    int y;
+    int z;
+} vec3i;
 
 typedef struct wall {
-	float x1, y1;
-	float x2, y2;
+	int x, y;
 	uint16_t color;
 } wall_t;
 
 typedef struct {
 	uint8_t idx, end;
-	float z1, z2;
+	int z1, z2;
 	uint16_t color;
+	double dist;
+	vec2 pos;
 } sector_t;
+
+typedef struct {
+	vec3 position;
+	float rotation;
+	float sin_rotation, cos_rotation;
+} entity_t;

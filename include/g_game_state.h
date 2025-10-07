@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <math.h>
 
 #include "g_data.h"
 
@@ -27,11 +28,13 @@ extern struct game_state {
         vec2 mouse;
         vec2 mouse_delta;
     } input;
-	struct {
-		vec3 position;
-		float rotation;
-	} origin;
+	entity_t origin;
 } state;
+
+extern sector_t *sectors;
+extern wall_t *walls;
+extern uint8_t wall_count;
+extern uint8_t sector_count;
 
 void game_init(int width, int height, int fps);
 

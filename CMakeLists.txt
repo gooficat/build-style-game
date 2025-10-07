@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-add_compile_options(-Wall -Wextra -Wpedantic)
+add_compile_options(-Wall -Wextra -Wpedantic -O3 -ffast-math)
 
 project(buildlikefps VERSION 1.0 LANGUAGES C)
 

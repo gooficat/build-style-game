@@ -7,9 +7,9 @@
 #include "g_data.h"
 #include "g_loader.h"
 
-#define G_WIDTH 640
+#define G_WIDTH 1280
 #define G_HEIGHT 320
-#define G_FPS 60
+#define G_FPS 2
 
 void game_loop(void) {
     g_frame_start();
@@ -25,7 +25,7 @@ uint8_t sector_count;
 int main(void) {
     game_init(G_WIDTH, G_HEIGHT, G_FPS);
 	printf("game initialized\n");
-	load_map("../map.txt", walls, sectors, &wall_count, &sector_count);
+	load_map("../map.txt");
 	
     renderer_init(state.renderer);
 
