@@ -12,12 +12,10 @@ int load_map(const char *path)
     FILE *f = fopen(path, "r");
 	if (!f) printf("failed to open map file\n");
     char ln[256];
-    char* texPath = "\0";
     SDL_Surface* texSurf;
 	uint8_t w, s, t;
     while (fgets(ln, 256, f)) {
-        switch (ln[0]) {
-        case 'w':
+        if (ln[0] == 'w') {
 			wall_count += 1;
             w = wall_count;
             walls = realloc(walls, sizeof(wall_t) * (w));
@@ -28,8 +26,8 @@ int load_map(const char *path)
                    &walls[w].x,
                    &walls[w].y,
                    &walls[w].texture);
-            break;
-        case 's':
+        }
+        else if (ln[0] == 's') {
 			sector_count += 1;
             s = sector_count;
             sectors = realloc(sectors, sizeof(sector_t) * (s));
@@ -42,19 +40,18 @@ int load_map(const char *path)
                    &sectors[s].z1,
                    &sectors[s].z2,
                    &sectors[s].color);
-            break;
-		case 'p':
+        }
+		else if (ln[0] == 'p') {
             sscanf(ln,
                    "p %f %f %f %f %*d",
                    &state.origin.position.x,
                    &state.origin.position.y,
                    &state.origin.position.z,
                    &state.origin.rotation);
-            break;
-        case 't':
-            printf("read texture\n");
-            *texPath = '\0';
-            texPath = "../textures/Glass.PNG";
+        }
+        else if (ln[0] == 't') {
+            char* texPath = &ln[2];
+            texPath[strlen(texPath) - 1] = '\0';
             texture_count += 1;
             t = texture_count;
             textures = realloc(textures, sizeof(texture_t) * (t));
@@ -66,9 +63,6 @@ int load_map(const char *path)
                 .pixels = malloc(sizeof(uint16_t) * texSurf->w * texSurf->h)
             };
             SDL_ConvertPixels(textures[t].w, textures[t].h, texSurf->format, texSurf->pixels, texSurf->pitch, SDL_PIXELFORMAT_ARGB4444, textures[t].pixels, sizeof(uint16_t) * textures[t].w);
-            break;
-        default:
-            break;
         }
     }
 	//get an average of the vertices 
