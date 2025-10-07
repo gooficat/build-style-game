@@ -9,7 +9,7 @@
 
 #define G_WIDTH 1280
 #define G_HEIGHT 320
-#define G_FPS 2
+#define G_FPS 20
 
 void game_loop(void) {
     g_frame_start();

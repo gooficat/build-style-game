@@ -4,7 +4,9 @@
 SDL_Texture* buffer_texture;
 uint16_t* buffer;
 
-int16_t *floor_lut, *ceil_lut;
+struct lut {
+	int16_t *t, *b;
+} lut;
 
 typedef struct {
 	int x, y1, y2, z1, z2;
@@ -20,16 +22,21 @@ void pixel(int x, int y, uint16_t color) {
     buffer[y * state.win_width + x] = color;
 }
 
-void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t color) {
-	int swp = x2;
-	x2 = x1;
-	x1 = swp;
-	swp = t2;
-	t2 = t1;
-	t1 = swp;
-	swp = b2;
-	b2 = b1;
-	b1 = swp;
+void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t color, int surf) {
+	bool backface;
+	if (x2 < x1) {
+		int swp = x2;
+			x2 = x1;
+			x1 = swp;
+		swp = t2;
+			t2 = t1;
+			t1 = swp;
+		swp = b2;
+			b2 = b1;
+			b1 = swp;
+		backface = true;
+	}
+	else backface = false;
 
 	int db = b2 - b1;
 	int dt = t2 - t1;
@@ -40,7 +47,7 @@ void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t color) {
 	if (x1 < 0) x1 = 0;
 	if (x2 < 0) x2 = 0;
 	
-	for (int x = x1; x < x2; x+=2) {
+	for (int x = x1; x < x2; x++) {
 		int y1 = db * (x - sx + 0.5) / dx + b1;
 		int y2 = dt * (x - sx + 0.5) / dx + t1;
 
@@ -49,8 +56,32 @@ void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t color) {
 		if (y1 < 0) y1 = 0;
 		if (y2 < 0) y2 = 0;
 
-		for (int y = y1; y < y2; y+=2) {
-			pixel(x, y, color);
+		if (!backface) {
+			for (int y = y1; y < y2; y++) {
+				pixel(x, y, color);
+			}
+			pixel(x, y1, color/9);
+		}
+
+		switch (surf) {
+			case 0:
+				break;
+			case 2: //above
+				if (backface) {
+					lut.t[x] = y1;
+				}
+				else {
+					lut.b[x] = y1;
+				}
+				break;
+			case 1: //below
+				if (backface) {
+					lut.b[x] = y2;
+				}
+				else {
+					lut.t[x] = y2;
+				}
+				break;
 		}
 	}
 }
@@ -70,13 +101,12 @@ void clip_line(int *x1, int *y1, int *z0, int x2, int y2, int z1) {
 void renderer_init(SDL_Renderer* renderer) {
     buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA4444, SDL_TEXTUREACCESS_STREAMING, state.win_width, state.win_height);
 	buffer = (uint16_t*)malloc(state.win_width * state.win_height * sizeof(uint16_t));
-	floor_lut = (int16_t*)malloc(state.win_width * sizeof(int16_t));
-	ceil_lut = (int16_t*)malloc(state.win_width * sizeof(int16_t));
+	lut.t = (int16_t*)malloc(state.win_width * sizeof(int16_t));
+	lut.b = (int16_t*)malloc(state.win_width * sizeof(int16_t));
 }
 
 
 void sort_sectors(void) {
-	int s;
 	double o = sectors[0].pos.x - state.origin.position.x;
 	double y = sectors[0].pos.y - state.origin.position.y;
 	
@@ -85,7 +115,7 @@ void sort_sectors(void) {
 	
 	sectors[0].dist = dist(x, y);
 	
-	for (s = 1; s < sector_count; s++) {
+	for (int s = 1; s < sector_count; s++) {
         o = sectors[s].pos.x - state.origin.position.x;
         y = sectors[s].pos.y - state.origin.position.y;
 
@@ -104,9 +134,11 @@ void sort_sectors(void) {
 }
 
 void draw_sector(int i) {
-	int SURF = 0;
-	if (state.origin.position.z < sectors[i].z1) SURF = 1;
-	else if (state.origin.position.z > sectors[i].z2) SURF = 2;
+	int SURF;
+	if (state.origin.position.z < sectors[i].z1) SURF = 2;
+	else if (state.origin.position.z > sectors[i].z2) SURF = 1;
+	else surf = 0;
+
 	
 	for (int j = sectors[i].idx; j < sectors[i].end; j++) {
 		int k = j+1;
@@ -153,7 +185,16 @@ void draw_sector(int i) {
 		wy[2] = wz[2] * FOCAL_LENGTH / wy[2] + state.win_height/2;
 		wy[3] = wz[3] * FOCAL_LENGTH / wy[3] + state.win_height/2;
 		
-		drawWall(wx[0], wx[1], wy[0], wy[1], wy[2], wy[3], walls[j].color);
+		drawWall(wx[0], wx[1], wy[0], wy[1], wy[2], wy[3], walls[j].color, SURF);
+
+		if (SURF == 0) continue;
+
+		for (int px = 0; px < state.win_width; px++) {
+			if (lut.t[px] == -1 && lut.b[px] == -1) continue;
+			for (int py = lut.t[px]; py < lut.b[px]; py++) {
+				pixel(px, py, 0xF00F);
+			}
+		}
 	}
 }
 
@@ -166,6 +207,8 @@ void renderer_render(SDL_Renderer* renderer) {
 	sort_sectors();
 	
 	for (int i = 0; i < sector_count; i++) {
+		memset(lut.t, -1, state.win_width * sizeof(int16_t));
+		memset(lut.b, -1, state.win_width * sizeof(int16_t));
 		draw_sector(i);
 	}
     SDL_UpdateTexture(buffer_texture, NULL, buffer, state.win_width * sizeof(uint16_t));
@@ -177,6 +220,6 @@ void renderer_render(SDL_Renderer* renderer) {
 void renderer_destroy() {
 	free(buffer);
 	SDL_DestroyTexture(buffer_texture);
-	free(floor_lut);
-	free(ceil_lut);
+	free(lut.t);
+	free(lut.b);
 }
