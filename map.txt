@@ -3,15 +3,15 @@ w 320 0 0
 w 320 320 0
 w 0 320 0
 
-w 432 464 0xFFFF
-w 520 464 0xFFFF
-w 520 496 0xFFFF
-w 432 496 0xFFFF
+w 432 464 1
+w 520 464 1
+w 520 496 1
+w 432 496 0
 
-w -264 -264 0xF0FF
-w -32 -264 0xF0FF
-w -32 -32 0x00FF
-w -264 -32 0xF0FF
+w -264 -264 0
+w -32 -264 2
+w -32 -32 0
+w -264 -32 2
 
 
 s 0 4 -160 0 0
@@ -21,4 +21,6 @@ s 8 12 -430 0 0
 
 p 10 10 -40 0 0
 
-t ../textures/Tnt.PNG
+t ../textures/Stone.PNG
+t ../textures/Leaves.PNG
+t ../textures/Wood.PNG
