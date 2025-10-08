@@ -26,10 +26,10 @@ void g_frame_start(void) {
 		dir.x--;
 	if (state.keys[SDL_SCANCODE_D])
 		dir.x++;
-	if (state.keys[SDL_SCANCODE_LSHIFT])
-		dir.z++;
-	if (state.keys[SDL_SCANCODE_SPACE])
-		dir.z--;
+	// if (state.keys[SDL_SCANCODE_LSHIFT])
+	// 	dir.z++;
+	// if (state.keys[SDL_SCANCODE_SPACE])
+	// 	dir.z--;
 	if (state.keys[SDL_SCANCODE_LEFT])
 		state.origin.rotation -= 0.002f * state.delta_time;
 	if (state.keys[SDL_SCANCODE_RIGHT])
@@ -37,8 +37,6 @@ void g_frame_start(void) {
 	
 	state.origin.sin_rotation = sinf(state.origin.rotation);
 	state.origin.cos_rotation = cosf(state.origin.rotation);
-	
-	
 	
 	state.origin.position.x += (dir.x * state.origin.cos_rotation + dir.y * state.origin.sin_rotation) * 0.2f * state.delta_time;
 	state.origin.position.y += (dir.y * state.origin.cos_rotation - dir.x * state.origin.sin_rotation) * 0.2f * state.delta_time;

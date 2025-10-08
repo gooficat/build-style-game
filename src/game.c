@@ -8,13 +8,16 @@
 #include "g_loader.h"
 #include "g_collision.h"
 
-#define G_WIDTH 1280
-#define G_HEIGHT 320
+#define G_WIDTH 960
+#define G_HEIGHT 480
 #define G_FPS 120
 
 void game_loop(void) {
     g_frame_start();
+
     sort_sectors();
+    state.origin.position.z = sectors[state.origin.current_sector].z2 - 60;
+
     renderer_render(state.renderer);
     g_frame_end();
 }

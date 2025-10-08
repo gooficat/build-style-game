@@ -33,6 +33,17 @@ void draw_wall(int x1, int x2, int b1, int b2, int t1, int t2,
 		swp = b2;
 			b2 = b1;
 			b1 = swp;
+
+
+		swp = px2;
+			px2 = px1;
+			px1 = swp;
+		swp = pt2;
+			pt2 = pt1;
+			pt1 = swp;
+		swp = pb2;
+			pb2 = pb1;
+			pb1 = swp;
 		backface = true;
 	}
 	else backface = false;
@@ -42,28 +53,37 @@ void draw_wall(int x1, int x2, int b1, int b2, int t1, int t2,
 	int dx = x2 - x1; if (!dx) dx = 1;
 	int sx = x1;
 
+	int dpx = px2 - px1;
 	int dpb = pb2 - pb1;
 	int dpt = pt2 - pt1;
+	int psx = px1;
 
 
 	float ht = 0;
 	float ht_step = (float)texture->w / (float)(x2 - x1);
 
-	if (x1 < 0) {
+
+	if (x2 >= px2) x2 = px2-1;
+	if (x1 < px1) x1 = px1;
+
+	if (x1 < px1) {
 		ht -= ht_step * x1;
 	}
 
-	if (x1 >= px2) x1 = px2;
-	if (x2 >= px2) x2 = px2;
-	if (x1 < px1) x1 = px1;
-	if (x2 < px1) x2 = px1;
+	if (x1 >= state.win_width) x1 = state.win_width - 1;
+	if (x2 >= state.win_width) x2 = state.win_width - 1;
+	if (x1 < 0) x1 = 0;
+	if (x2 < 0) x2 = 0;
+
+	int px = x1;
 	
 	for (int x = x1; x < x2; x++) {
+		px++;
 		int y1 = db * (x - sx + 0.5) / dx + b1;
 		int y2 = dt * (x - sx + 0.5) / dx + t1;
 
-		int py2 = dpb * (x - sx + 0.5) / dx + pb1;
-		int py1 = dpt * (x - sx + 0.5) / dx + pt1;
+		int py1 = dpb * (px - psx + 0.5) / dpx + pb1;
+		int py2 = dpt * (px - psx + 0.5) / dpx + pt1;
 
 		float vt = 0;
 		float vt_step = (float)texture->h / (float)(y2 - y1);
@@ -72,10 +92,13 @@ void draw_wall(int x1, int x2, int b1, int b2, int t1, int t2,
 			vt -= vt_step * y1;
 		}
 
-		if (y1 >= py2) y1 = py2;
-		if (y2 >= py2) y2 = py2;
+		if (y2 >= py2) y2 = py2-1;
 		if (y1 < py1) y1 = py1;
-		if (y2 < py1) y2 = py1;
+
+		if (y1 >= state.win_height) y1 = state.win_height - 1;
+		if (y2 >= state.win_height) y2 = state.win_height - 1;
+		if (y1 < 0) y1 = 0;
+		if (y2 < 0) y2 = 0;
 
 		if (!backface) {
 			ceil_lut->t[x] = y1;
@@ -180,13 +203,8 @@ void draw_sector(int i,
 			&sectors[i].ceil_lut
 		);
 
-
 		if (walls[j].to && x2 < x1) {
-			draw_sector(i + walls[j].to, px1, px2, pb1, pb2, pt1, pt2);
-			printf("%hhd\n to %hhd\n", walls[j].to, i + walls[j].to);
-		}
-		else {
-			printf("not portal\n");
+			draw_sector(i + walls[j].to, x1, x2, b1, b2, t1, t2);
 		}
 	}
 	for (int px = 0; px < state.win_width; px++) {
@@ -220,9 +238,8 @@ void renderer_render(SDL_Renderer* renderer) {
 	memset(buffer, 0, state.win_width * state.win_height * sizeof(int16_t));
 
 	draw_sector(state.origin.current_sector,
-					0, state.win_width-1,
-					state.win_height-1, state.win_height-1,
-					0, 0);
+					state.win_width-1, 0, 0, 0,
+					state.win_height-1, state.win_height-1);
 
     SDL_UpdateTexture(buffer_texture, NULL, buffer, state.win_width * sizeof(uint16_t));
     SDL_RenderTexture(renderer, buffer_texture, NULL, NULL);

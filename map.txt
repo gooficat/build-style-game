@@ -15,11 +15,11 @@ w 0 320 0 0
 
 
 s 0 4 -160 40 0
-s 4 8 -380 0 0
+s 4 8 -380 60 0
 s 8 12 -380 0 0
 
 p 10 10 -40 0 0
 
-t ../textures/Stone.PNG
-t ../textures/Leaves.PNG
-t ../textures/Wood.PNG
+t ../textures/Brickwall2_Texture.png
+t ../textures/Stones_Texture.png
+t ../textures/Brickwall_Texture.png
