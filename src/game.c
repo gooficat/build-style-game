@@ -6,6 +6,7 @@
 
 #include "g_data.h"
 #include "g_loader.h"
+#include "g_collision.h"
 
 #define G_WIDTH 1280
 #define G_HEIGHT 320
@@ -13,6 +14,7 @@
 
 void game_loop(void) {
     g_frame_start();
+    sort_sectors();
     renderer_render(state.renderer);
     g_frame_end();
 }

@@ -9,6 +9,7 @@ add_executable(
 	src/g_game_state.c
 	src/game.c
 	src/r_renderer.c
+	src/g_collision.c
 )
 
 target_include_directories(buildlikefps PRIVATE include)

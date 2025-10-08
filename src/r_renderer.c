@@ -19,6 +19,7 @@ typedef struct {
 } swall_t;
 
 
+
 void pixel(int x, int y, uint16_t color) {
     buffer[y * state.win_width + x] = color;
 }
@@ -56,8 +57,8 @@ void draw_wall(int x1, int x2, int b1, int b2, int t1, int t2,
 	if (x1 < 0) {
 		ht -= ht_step * x1;
 	}
-	if (x1 >= state.win_width) x1 = state.win_width + 1;
-	if (x2 >= state.win_width) x2 = state.win_width + 1;
+	if (x1 >= state.win_width) x1 = state.win_width - 1;
+	if (x2 >= state.win_width) x2 = state.win_width - 1;
 	if (x1 < 0) x1 = 0;
 	if (x2 < 0) x2 = 0;
 /*
@@ -125,39 +126,7 @@ void renderer_init(SDL_Renderer* renderer) {
 	floor_lut.b = (int16_t*)malloc(state.win_width * sizeof(int16_t));
 }
 
-bool in_sec(int i) {
-	bool collision = false;
-	for (int j = sectors[i].idx; j < sectors[i].end; j++) {
-		int k = j+1;
-		if (k == sectors[i].end) k = sectors[i].idx;
-
-		vec2i a = {
-			walls[j].x - state.origin.position.x,
-			walls[j].y - state.origin.position.y
-		};
-
-		vec2i b = {
-			walls[k].x - state.origin.position.x,
-			walls[k].y - state.origin.position.y
-		};
-
-		if ((a.y > 0) != (b.y > 0) &&
-			(0 < (b.x - a.x) * (-a.y) / (b.y - a.y) + a.x)) {
-			collision = !collision;
-		}
-	}
-	return collision;
-}
-
-void sort_sectors(void) {
-	for (int s = 0; s < sector_count; s++) {
-		if (in_sec(s)) {
-			state.origin.current_sector = s;
-		}
-	}
-}
-
-void draw_sector(int i, int x1, int x2, int b1, int b2, int t1, int t2) {
+void draw_sector(int i) {
 
 	memset(ceil_lut.t, -1, state.win_width * sizeof(int16_t));
 	memset(ceil_lut.b, -1, state.win_width * sizeof(int16_t));
@@ -212,8 +181,7 @@ void draw_sector(int i, int x1, int x2, int b1, int b2, int t1, int t2) {
 			x1, x2,
 			b1, b2,
 			t1, t2,
-			&textures[walls[j].texture]
-		);
+			&textures[walls[j].texture]);
 	}
 	for (int px = 0; px < state.win_width; px++) {
 		if (ceil_lut.t[px] == -1 && ceil_lut.b[px] == -1) goto next;
@@ -242,14 +210,12 @@ void draw_sector(int i, int x1, int x2, int b1, int b2, int t1, int t2) {
 
 
 void renderer_render(SDL_Renderer* renderer) {
-	memset(buffer, 0x2222, state.win_width * state.win_height * sizeof(uint16_t));
+	memset(buffer, 0x5555, state.win_width * state.win_height * sizeof(uint16_t));
 
     SDL_RenderClear(renderer);
 	
-	sort_sectors();
-	
 	for (int i = 0; i < sector_count; i++) {
-		draw_sector(state.origin.current_sector, 0, 0, state.win_height-1, state.win_height-1, 0, 0);
+		draw_sector(state.origin.current_sector);
 	}
     SDL_UpdateTexture(buffer_texture, NULL, buffer, state.win_width * sizeof(uint16_t));
     SDL_RenderTexture(renderer, buffer_texture, NULL, NULL);
