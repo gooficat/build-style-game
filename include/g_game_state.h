@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "g_data.h"
 

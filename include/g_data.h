@@ -27,6 +27,7 @@ typedef struct vec3i {
 typedef struct wall {
 	int x, y;
 	uint8_t texture;
+	int to;
 } wall_t;
 
 typedef struct {
@@ -41,6 +42,7 @@ typedef struct {
 	vec3 position;
 	float rotation;
 	float sin_rotation, cos_rotation;
+	uint8_t current_sector;
 } entity_t;
 
 typedef struct {
