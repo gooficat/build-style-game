@@ -25,8 +25,8 @@ void pixel(int x, int y, uint16_t color) {
 }
 
 void draw_wall(int x1, int x2, int b1, int b2, int t1, int t2,
-			   texture_t* texture) {
-			   //, int px1, int px2, int pb1, int pb2, int pt1, int pt2) {
+			   texture_t* texture,
+			   int px1, int px2, int pb1, int pb2, int pt1, int pt2) {
 	bool backface;
 	if (x2 < x1) {
 		int swp = x2;
@@ -46,9 +46,9 @@ void draw_wall(int x1, int x2, int b1, int b2, int t1, int t2,
 	int dt = t2 - t1;
 	int dx = x2 - x1; if (!dx) dx = 1;
 	int sx = x1;
-/*
+
 	int dpb = pb2 - pb1;
-	int dpt = pt2 - pt1;*/
+	int dpt = pt2 - pt1;
 
 
 	float ht = 0;
@@ -57,22 +57,22 @@ void draw_wall(int x1, int x2, int b1, int b2, int t1, int t2,
 	if (x1 < 0) {
 		ht -= ht_step * x1;
 	}
-	if (x1 >= state.win_width) x1 = state.win_width - 1;
-	if (x2 >= state.win_width) x2 = state.win_width - 1;
-	if (x1 < 0) x1 = 0;
-	if (x2 < 0) x2 = 0;
-/*
-	if (x1 >= px2) x1 = px1-3;
-	if (x2 >= px2) x2 = px2-3;
-	if (x1 < px1) x1 = px1+2;
-	if (x2 < px1) x2 = px1+2;*/
+	// if (x1 >= state.win_width) x1 = state.win_width - 1;
+	// if (x2 >= state.win_width) x2 = state.win_width - 1;
+	// if (x1 < 0) x1 = 0;
+	// if (x2 < 0) x2 = 0;
+
+	if (x1 >= px2) x1 = px2;
+	if (x2 >= px2) x2 = px2;
+	if (x1 < px1) x1 = px1;
+	if (x2 < px1) x2 = px1;
 	
 	for (int x = x1; x < x2; x++) {
 		int y1 = db * (x - sx + 0.5) / dx + b1;
 		int y2 = dt * (x - sx + 0.5) / dx + t1;
-/*
-		int py1 = dpb * (x - sx + 0.5) / dx + b1;
-		int py2 = dpb * (x - sx + 0.5) / dx + t1;*/
+
+		int py2 = dpb * (x - sx + 0.5) / dx + pb1;
+		int py1 = dpt * (x - sx + 0.5) / dx + pt1;
 
 		float vt = 0;
 		float vt_step = (float)texture->h / (float)(y2 - y1);
@@ -81,10 +81,16 @@ void draw_wall(int x1, int x2, int b1, int b2, int t1, int t2,
 			vt -= vt_step * y1;
 		}
 
-		if (y1 >= state.win_height) y1 = state.win_height - 1;
-		if (y2 >= state.win_height) y2 = state.win_height - 1;
-		if (y1 < 0) y1 = 0;
-		if (y2 < 0) y2 = 0;
+		// if (y1 >= state.win_height) y1 = state.win_height - 1;
+		// if (y2 >= state.win_height) y2 = state.win_height - 1;
+		// if (y1 < 0) y1 = 0;
+		// if (y2 < 0) y2 = 0;
+
+
+		if (y1 >= py2) y1 = py2;
+		if (y2 >= py2) y2 = py2;
+		if (y1 < py1) y1 = py1;
+		if (y2 < py1) y2 = py1;
 
 		if (!backface) {
 			ceil_lut.t[x] = y1;
@@ -126,49 +132,52 @@ void renderer_init(SDL_Renderer* renderer) {
 	floor_lut.b = (int16_t*)malloc(state.win_width * sizeof(int16_t));
 }
 
-void draw_sector(int i) {
+void draw_sector(int i,
+				int px1, int px2, int pb1, int pb2, int pt1, int pt2) {
 
 	memset(ceil_lut.t, -1, state.win_width * sizeof(int16_t));
 	memset(ceil_lut.b, -1, state.win_width * sizeof(int16_t));
 	memset(floor_lut.t, -1, state.win_width * sizeof(int16_t));
 	memset(floor_lut.b, -1, state.win_width * sizeof(int16_t));
+
+	int wx[4], wy[4], wz[4];
+
 	for (int j = sectors[i].idx; j < sectors[i].end; j++) {
-		int k = j+1;
-		if (k == sectors[i].end) k = sectors[i].idx;
+		{
+			int k = j+1;
+			if (k == sectors[i].end) k = sectors[i].idx;
 
-		vec2i a = {
-			walls[j].x - state.origin.position.x,
-			walls[j].y - state.origin.position.y
-		};
+			vec2i a = {
+				walls[j].x - state.origin.position.x,
+				walls[j].y - state.origin.position.y
+			};
 
-		vec2i b = {
-			walls[k].x - state.origin.position.x,
-			walls[k].y - state.origin.position.y
-		};
+			vec2i b = {
+				walls[k].x - state.origin.position.x,
+				walls[k].y - state.origin.position.y
+			};
 
-		int wx[4], wy[4], wz[4];
+			wx[2] = wx[0] = a.x * state.origin.cos_rotation - a.y * state.origin.sin_rotation;
+			wx[3] = wx[1] = b.x * state.origin.cos_rotation - b.y * state.origin.sin_rotation;
 
-		wx[2] = wx[0] = a.x * state.origin.cos_rotation - a.y * state.origin.sin_rotation;
-		wx[3] = wx[1] = b.x * state.origin.cos_rotation - b.y * state.origin.sin_rotation;
+			wy[2] = wy[0] = a.x * state.origin.sin_rotation + a.y * state.origin.cos_rotation;
+			wy[3] = wy[1] = b.x * state.origin.sin_rotation + b.y * state.origin.cos_rotation;
 
-		wy[2] = wy[0] = a.x * state.origin.sin_rotation + a.y * state.origin.cos_rotation;
-		wy[3] = wy[1] = b.x * state.origin.sin_rotation + b.y * state.origin.cos_rotation;
+			wz[1] = wz[0] = sectors[i].z1 - state.origin.position.z;
+			wz[3] = wz[2] = sectors[i].z2 - state.origin.position.z;
 
-		wz[1] = wz[0] = sectors[i].z1 - state.origin.position.z;
-		wz[3] = wz[2] = sectors[i].z2 - state.origin.position.z;
-
-		if (wy[0] <= 0 && wy[1] <= 0) {
-			continue;
+			if (wy[0] <= 0 && wy[1] <= 0) {
+				continue;
+			}
+			else if (wy[0] <= 0) {
+				clip_line(&wx[0], &wy[0], &wz[0], wx[1], wy[1], wz[1]);
+				clip_line(&wx[2], &wy[2], &wz[2], wx[3], wy[3], wz[3]);
+			}
+			else if (wy[1] <= 0) {
+				clip_line(&wx[1], &wy[1], &wz[1], wx[0], wy[0], wz[0]);
+				clip_line(&wx[3], &wy[3], &wz[3], wx[2], wy[2], wz[2]);
+			}
 		}
-		else if (wy[0] <= 0) {
-			clip_line(&wx[0], &wy[0], &wz[0], wx[1], wy[1], wz[1]);
-			clip_line(&wx[2], &wy[2], &wz[2], wx[3], wy[3], wz[3]);
-		}
-		else if (wy[1] <= 0) {
-			clip_line(&wx[1], &wy[1], &wz[1], wx[0], wy[0], wz[0]);
-			clip_line(&wx[3], &wy[3], &wz[3], wx[2], wy[2], wz[2]);
-		}
-
 
 		int x1 = wx[0] * FOCAL_LENGTH / wy[0] + state.win_width/2;
 		int x2 = wx[1] * FOCAL_LENGTH / wy[1] + state.win_width/2;
@@ -181,7 +190,11 @@ void draw_sector(int i) {
 			x1, x2,
 			b1, b2,
 			t1, t2,
-			&textures[walls[j].texture]);
+			&textures[walls[j].texture],
+			px1, px2,
+			pb1, pb2,
+			pt1, pt2
+		);
 	}
 	for (int px = 0; px < state.win_width; px++) {
 		if (ceil_lut.t[px] == -1 && ceil_lut.b[px] == -1) goto next;
@@ -215,7 +228,10 @@ void renderer_render(SDL_Renderer* renderer) {
     SDL_RenderClear(renderer);
 	
 	for (int i = 0; i < sector_count; i++) {
-		draw_sector(state.origin.current_sector);
+		draw_sector(state.origin.current_sector,
+					0, state.win_width-1,
+					state.win_height-1, state.win_height-1,
+					0, 0);
 	}
     SDL_UpdateTexture(buffer_texture, NULL, buffer, state.win_width * sizeof(uint16_t));
     SDL_RenderTexture(renderer, buffer_texture, NULL, NULL);
