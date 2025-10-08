@@ -14,3 +14,7 @@ void renderer_init(SDL_Renderer* renderer);
 void renderer_render(SDL_Renderer* renderer);
 
 void renderer_destroy(void);
+
+
+void draw_sector(int i,
+                 int px1, int px2, int pb1, int pb2, int pt1, int pt2);

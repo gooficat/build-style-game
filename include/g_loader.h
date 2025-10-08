@@ -22,10 +22,11 @@ int load_map(const char *path)
 			w -= 1;
             walls[w] = (wall_t){0};
             sscanf(ln,
-                   "w %d %d %hhu",
+                   "w %d %d %hhu %hhd",
                    &walls[w].x,
                    &walls[w].y,
-                   &walls[w].texture);
+                   &walls[w].texture,
+                   &walls[w].to);
         }
         else if (ln[0] == 's') {
 			sector_count += 1;
@@ -40,6 +41,11 @@ int load_map(const char *path)
                    &sectors[s].z1,
                    &sectors[s].z2,
                    &sectors[s].color);
+
+            sectors[s].ceil_lut.t = (int16_t*)malloc(state.win_width * sizeof(int16_t));
+            sectors[s].ceil_lut.b = (int16_t*)malloc(state.win_width * sizeof(int16_t));
+            sectors[s].floor_lut.t = (int16_t*)malloc(state.win_width * sizeof(int16_t));
+            sectors[s].floor_lut.b = (int16_t*)malloc(state.win_width * sizeof(int16_t));
         }
 		else if (ln[0] == 'p') {
             sscanf(ln,

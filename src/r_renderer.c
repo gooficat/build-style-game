@@ -4,10 +4,6 @@
 SDL_Texture* buffer_texture;
 uint16_t* buffer;
 
-struct lut {
-	int16_t *t, *b;
-} ceil_lut, floor_lut;
-
 typedef struct {
 	int x, y1, y2, z1, z2;
 } wwall_t;
@@ -18,15 +14,14 @@ typedef struct {
 	int b1, b2;
 } swall_t;
 
-
-
 void pixel(int x, int y, uint16_t color) {
     buffer[y * state.win_width + x] = color;
 }
 
 void draw_wall(int x1, int x2, int b1, int b2, int t1, int t2,
 			   texture_t* texture,
-			   int px1, int px2, int pb1, int pb2, int pt1, int pt2) {
+			   int px1, int px2, int pb1, int pb2, int pt1, int pt2,
+			   uint8_t to, lut_t* floor_lut, lut_t* ceil_lut) {
 	bool backface;
 	if (x2 < x1) {
 		int swp = x2;
@@ -57,10 +52,6 @@ void draw_wall(int x1, int x2, int b1, int b2, int t1, int t2,
 	if (x1 < 0) {
 		ht -= ht_step * x1;
 	}
-	// if (x1 >= state.win_width) x1 = state.win_width - 1;
-	// if (x2 >= state.win_width) x2 = state.win_width - 1;
-	// if (x1 < 0) x1 = 0;
-	// if (x2 < 0) x2 = 0;
 
 	if (x1 >= px2) x1 = px2;
 	if (x2 >= px2) x2 = px2;
@@ -81,33 +72,28 @@ void draw_wall(int x1, int x2, int b1, int b2, int t1, int t2,
 			vt -= vt_step * y1;
 		}
 
-		// if (y1 >= state.win_height) y1 = state.win_height - 1;
-		// if (y2 >= state.win_height) y2 = state.win_height - 1;
-		// if (y1 < 0) y1 = 0;
-		// if (y2 < 0) y2 = 0;
-
-
 		if (y1 >= py2) y1 = py2;
 		if (y2 >= py2) y2 = py2;
 		if (y1 < py1) y1 = py1;
 		if (y2 < py1) y2 = py1;
 
 		if (!backface) {
-			ceil_lut.t[x] = y1;
-			floor_lut.b[x] = y2;
+			ceil_lut->t[x] = y1;
+			floor_lut->b[x] = y2;
 		}
 		else {
-			ceil_lut.b[x] = y1;
-			floor_lut.t[x] = y2;
+			ceil_lut->b[x] = y1;
+			floor_lut->t[x] = y2;
 
-			for (int y = y1; y < y2; y++) {
-				uint16_t color = texture->pixels[(int)vt * texture->w + (int)ht];
-				pixel(x, y, color);
-				vt += vt_step;
+			if (!to) {
+				for (int y = y1; y < y2; y++) {
+					uint16_t color = texture->pixels[(int)vt * texture->w + (int)ht];
+					pixel(x, y, color);
+					vt += vt_step;
+				}
 			}
 		}
 		ht += ht_step;
-
 	}
 }
 
@@ -126,19 +112,14 @@ void clip_line(int *x1, int *y1, int *z1, int x2, int y2, int z2) {
 void renderer_init(SDL_Renderer* renderer) {
     buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB4444, SDL_TEXTUREACCESS_STREAMING, state.win_width, state.win_height);
 	buffer = (uint16_t*)malloc(state.win_width * state.win_height * sizeof(uint16_t));
-	ceil_lut.t = (int16_t*)malloc(state.win_width * sizeof(int16_t));
-	ceil_lut.b = (int16_t*)malloc(state.win_width * sizeof(int16_t));
-	floor_lut.t = (int16_t*)malloc(state.win_width * sizeof(int16_t));
-	floor_lut.b = (int16_t*)malloc(state.win_width * sizeof(int16_t));
 }
 
 void draw_sector(int i,
 				int px1, int px2, int pb1, int pb2, int pt1, int pt2) {
-
-	memset(ceil_lut.t, -1, state.win_width * sizeof(int16_t));
-	memset(ceil_lut.b, -1, state.win_width * sizeof(int16_t));
-	memset(floor_lut.t, -1, state.win_width * sizeof(int16_t));
-	memset(floor_lut.b, -1, state.win_width * sizeof(int16_t));
+	memset(sectors[i].ceil_lut.t, -1, state.win_width * sizeof(int16_t));
+	memset(sectors[i].ceil_lut.b, -1, state.win_width * sizeof(int16_t));
+	memset(sectors[i].floor_lut.t, -1, state.win_width * sizeof(int16_t));
+	memset(sectors[i].floor_lut.b, -1, state.win_width * sizeof(int16_t));
 
 	int wx[4], wy[4], wz[4];
 
@@ -193,46 +174,56 @@ void draw_sector(int i,
 			&textures[walls[j].texture],
 			px1, px2,
 			pb1, pb2,
-			pt1, pt2
+			pt1, pt2,
+			walls[j].to,
+			&sectors[i].floor_lut,
+			&sectors[i].ceil_lut
 		);
+
+
+		if (walls[j].to && x2 < x1) {
+			draw_sector(i + walls[j].to, px1, px2, pb1, pb2, pt1, pt2);
+			printf("%hhd\n to %hhd\n", walls[j].to, i + walls[j].to);
+		}
+		else {
+			printf("not portal\n");
+		}
 	}
 	for (int px = 0; px < state.win_width; px++) {
-		if (ceil_lut.t[px] == -1 && ceil_lut.b[px] == -1) goto next;
-		if (ceil_lut.t[px] == -1) {
-			ceil_lut.t[px] = 0;
+		if (sectors[i].ceil_lut.t[px] == -1 && sectors[i].ceil_lut.b[px] == -1) goto next;
+		if (sectors[i].ceil_lut.t[px] == -1) {
+			sectors[i].ceil_lut.t[px] = 0;
 		}
-		else if (ceil_lut.b[px] == -1) {
-			ceil_lut.b[px] = state.win_height - 1;
+		else if (sectors[i].ceil_lut.b[px] == -1) {
+			sectors[i].ceil_lut.b[px] = state.win_height - 1;
 		}
-		for (int py = ceil_lut.t[px]; py < ceil_lut.b[px]; py++) {
-			pixel(px, py, 0xF0F3);
+		for (int py = sectors[i].ceil_lut.t[px]; py < sectors[i].ceil_lut.b[px]; py++) {
+			pixel(px, py, 0xF063);
 		}
 		next:
-		if (floor_lut.t[px] == -1 && floor_lut.b[px] == -1) continue;
-		if (floor_lut.t[px] == -1) {
-			floor_lut.t[px] = 0;
+		if (sectors[i].floor_lut.t[px] == -1 && sectors[i].floor_lut.b[px] == -1) continue;
+		if (sectors[i].floor_lut.t[px] == -1) {
+			sectors[i].floor_lut.t[px] = 0;
 		}
-		else if (floor_lut.b[px] == -1) {
-			floor_lut.b[px] = state.win_height - 1;
+		else if (sectors[i].floor_lut.b[px] == -1) {
+			sectors[i].floor_lut.b[px] = state.win_height - 1;
 		}
-		for (int py = floor_lut.t[px]; py < floor_lut.b[px]; py++) {
-			pixel(px, py, 0xF003);
+		for (int py = sectors[i].floor_lut.t[px]; py < sectors[i].floor_lut.b[px]; py++) {
+			pixel(px, py, 0x200F);
 		}
 	}
 }
 
 
 void renderer_render(SDL_Renderer* renderer) {
-	memset(buffer, 0x5555, state.win_width * state.win_height * sizeof(uint16_t));
+	SDL_RenderClear(renderer);
+	memset(buffer, 0, state.win_width * state.win_height * sizeof(int16_t));
 
-    SDL_RenderClear(renderer);
-	
-	for (int i = 0; i < sector_count; i++) {
-		draw_sector(state.origin.current_sector,
+	draw_sector(state.origin.current_sector,
 					0, state.win_width-1,
 					state.win_height-1, state.win_height-1,
 					0, 0);
-	}
+
     SDL_UpdateTexture(buffer_texture, NULL, buffer, state.win_width * sizeof(uint16_t));
     SDL_RenderTexture(renderer, buffer_texture, NULL, NULL);
     SDL_RenderPresent(renderer);
@@ -242,8 +233,4 @@ void renderer_render(SDL_Renderer* renderer) {
 void renderer_destroy(void) {
 	free(buffer);
 	SDL_DestroyTexture(buffer_texture);
-	free(ceil_lut.t);
-	free(ceil_lut.b);
-	free(floor_lut.t);
-	free(floor_lut.b);
 }

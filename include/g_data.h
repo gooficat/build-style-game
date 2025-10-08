@@ -24,10 +24,14 @@ typedef struct vec3i {
     int z;
 } vec3i;
 
+typedef struct lut {
+	int16_t *t, *b;
+} lut_t;
+
 typedef struct wall {
 	int x, y;
 	uint8_t texture;
-	int to;
+	int8_t to;
 } wall_t;
 
 typedef struct {
@@ -36,6 +40,7 @@ typedef struct {
 	uint16_t color;
 	double dist;
 	vec2 pos;
+	lut_t ceil_lut, floor_lut;
 } sector_t;
 
 typedef struct {
