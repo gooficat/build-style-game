@@ -37,7 +37,7 @@ typedef struct wall {
 typedef struct {
 	uint8_t idx, end;
 	int z1, z2;
-	uint16_t color;
+	uint16_t f_color, c_color;
 	double dist;
 	vec2 pos;
 	lut_t ceil_lut, floor_lut;

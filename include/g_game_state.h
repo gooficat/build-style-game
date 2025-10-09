@@ -9,6 +9,11 @@
 
 #include "g_data.h"
 
+extern SDL_Rect srcRect, dstRect;
+
+#define RW srcRect.w
+#define RH srcRect.h
+
 extern struct game_state {
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -39,7 +44,7 @@ extern uint8_t sector_count;
 extern texture_t* textures;
 extern uint8_t texture_count;
 
-void game_init(int width, int height, int fps);
+void game_init(int width, int height, int fps, int scaling);
 
 void g_frame_start(void);
 void g_frame_end(void);

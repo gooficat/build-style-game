@@ -10,7 +10,9 @@
 
 #define G_WIDTH 960
 #define G_HEIGHT 480
-#define G_FPS 120
+#define G_FPS 60
+
+#define SCALING 1
 
 void game_loop(void) {
     g_frame_start();
@@ -30,7 +32,7 @@ texture_t* textures;
 uint8_t texture_count = 0;
 
 int main(void) {
-    game_init(G_WIDTH, G_HEIGHT, G_FPS);
+    game_init(G_WIDTH, G_HEIGHT, G_FPS, SCALING);
 	printf("game initialized\n");
 	load_map("../map.txt");
 	

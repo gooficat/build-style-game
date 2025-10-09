@@ -1,15 +1,15 @@
 #include "g_collision.h"
 
 
-bool line_line(vec2 a1, vec2 a2, vec2 b1, vec2 b2) {
+// bool line_line(vec2 a1, vec2 a2, vec2 b1, vec2 b2) {
+//
+// }
 
-}
-
-bool in_sec(int i) {
+bool in_sec(sector_t* s) {
     bool collision = false;
-    for (int j = sectors[i].idx; j < sectors[i].end; j++) {
+    for (int j = s->idx; j < s->end; j++) {
         int k = j+1;
-        if (k == sectors[i].end) k = sectors[i].idx;
+        if (k == s->end) k = s->idx;
 
         vec2i a = {
             walls[j].x - state.origin.position.x,
@@ -31,7 +31,7 @@ bool in_sec(int i) {
 
 void sort_sectors(void) {
     for (int s = 0; s < sector_count; s++) {
-        if (in_sec(s)) {
+        if (in_sec(&sectors[s])) {
             state.origin.current_sector = s;
         }
     }

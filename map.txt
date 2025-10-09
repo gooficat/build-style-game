@@ -1,25 +1,25 @@
-w 0 0 0 0
-w 320 0 0 0
-w 320 320 0 0
+w 30 0 0
+w 320 0 0
+w 320 320 0
 w 0 320 0 1
 
 w 0 320 1 1
-w -320 320 1 0
-w -320 0 1 0
-w 0 0 0 -1
+w -320 320 1
+w -320 0 1
+w 30 0 0 -1
 
-w 0 640 1 0
-w -320 640 1 0
+w 0 640 1
+w -320 640 1
 w -320 320 1 -1
-w 0 320 0 0
+w 0 320 0
 
 
-s 0 4 -160 40 0
-s 4 8 -380 60 0
-s 8 12 -380 0 0
+s 0 4 -160 40 0x314C 0xF044
+s 4 8 -380 60 0xF222 0x3333
+s 8 12 -380 0 0xF016 0xF04F
 
 p 10 10 -40 0 0
 
-t ../textures/Brickwall2_Texture.png
-t ../textures/Stones_Texture.png
-t ../textures/Brickwall_Texture.png
+t ../textures/Red/Prototype_Grid_Red_03-128x128.png
+t ../textures/Blue/Prototype_Grid_Blue_03-128x128.png
+t ../textures/Teal/Prototype_Grid_Teal_03-128x128.png

@@ -7,6 +7,8 @@
 
 #include "g_game_state.h"
 
+#include "utils.h"
+
 #define FOCAL_LENGTH 200.0f
 
 void renderer_init(SDL_Renderer* renderer);

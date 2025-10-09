@@ -4,11 +4,18 @@
 
 struct game_state state;
 
-void game_init(int width, int height, int fps) {
+SDL_Rect srcRect, dstRect;
+
+void game_init(int width, int height, int fps, int scaling) {
     state.win_width = width;
     state.win_height = height;
     state.target_frame_time = 1000.0 / fps;
-
+	srcRect.x = 0, srcRect.y = 0;
+	dstRect.x = 0, dstRect.y = 0;
+	srcRect.w = width/scaling;
+	srcRect.h = height/scaling;
+	dstRect.w = width;
+	dstRect.h = height;
     SDL_CreateWindowAndRenderer("by gooficat", width, height, 0, &state.window, &state.renderer);
 }
 

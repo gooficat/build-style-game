@@ -35,12 +35,13 @@ int load_map(const char *path)
 			s -= 1;
             sectors[s] = (sector_t){0};
             sscanf(ln,
-                   "s %hhu %hhu %d %d %hx",
+                   "s %hhu %hhu %d %d %hx %hx",
                    &sectors[s].idx,
                    &sectors[s].end,
                    &sectors[s].z1,
                    &sectors[s].z2,
-                   &sectors[s].color);
+                   &sectors[s].f_color,
+                   &sectors[s].c_color);
 
             sectors[s].ceil_lut.t = (int16_t*)malloc(state.win_width * sizeof(int16_t));
             sectors[s].ceil_lut.b = (int16_t*)malloc(state.win_width * sizeof(int16_t));
